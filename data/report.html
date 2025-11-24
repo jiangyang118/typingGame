@@ -1,0 +1,94 @@
+
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8" />
+<title>学习报告</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', Arial, sans-serif; color: #333; }
+  h1 { margin: 16px 0; }
+  .section { margin-bottom: 28px; }
+  .chart { margin: 12px 0 24px; }
+  .chart h3 { margin: 8px 0; font-weight: 600; }
+  .grid { stroke: #eee; stroke-width: 1; }
+  .axis { fill: #666; font-size: 12px; }
+  .summary { display: flex; gap: 16px; flex-wrap: wrap; margin: 8px 0 12px; }
+  .card { border: 1px solid #eee; border-radius: 8px; padding: 8px 12px; background: #fafafa; }
+  .mode-title { display: inline-flex; align-items: center; gap: 8px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .nodata { color: #999; font-size: 14px; padding: 8px 0; }
+  .footer { color: #aaa; font-size: 12px; margin-top: 24px; }
+</style>
+<body>
+<h1>学习报告</h1>
+<div class='section'>最近 30 次：折线图；最近 12 周：柱状图</div>
+
+<div class='section'>
+<div class='mode-title'><span class='dot' style='background:#ff6a5c'></span><h2 style='margin:0'>大写字母</h2></div>
+<div class='summary'>
+<div class='card'>历史次数：1</div>
+<div class='card'>历史最佳：40</div>
+<div class='card'>历史平均：40</div>
+<div class='card'>最近30次平均：40</div>
+</div>
+
+<div class='chart'>
+  <h3>最近成绩（分数）</h3>
+  <svg width='760' height='260' viewBox='0 0 760 260'>
+    <rect x='0' y='0' width='760' height='260' fill='white'/>
+    <line x1='40' y1='220' x2='720' y2='220' class='grid' /><text x='32' y='224' class='axis' text-anchor='end'>0</text><line x1='40' y1='184' x2='720' y2='184' class='grid' /><text x='32' y='188' class='axis' text-anchor='end'>10</text><line x1='40' y1='148' x2='720' y2='148' class='grid' /><text x='32' y='152' class='axis' text-anchor='end'>20</text><line x1='40' y1='112' x2='720' y2='112' class='grid' /><text x='32' y='116' class='axis' text-anchor='end'>30</text><line x1='40' y1='76' x2='720' y2='76' class='grid' /><text x='32' y='80' class='axis' text-anchor='end'>40</text><line x1='40' y1='40' x2='720' y2='40' class='grid' /><text x='32' y='44' class='axis' text-anchor='end'>50</text>
+    <polyline fill='none' stroke='#ff6a5c' stroke-width='2' points='380,76' />
+    <circle cx='380' cy='76' r='3' fill='#ff6a5c' />
+    <text x='380' y='252' class='axis' text-anchor='start'>11-24</text>
+  </svg>
+</div>
+
+<div class='chart'>
+  <h3>每周平均分（最近 12 周）</h3>
+  <svg width='760' height='260' viewBox='0 0 760 260'>
+    <rect x='0' y='0' width='760' height='260' fill='white'/>
+    <line x1='40' y1='220' x2='720' y2='220' class='grid' /><text x='32' y='224' class='axis' text-anchor='end'>0</text><line x1='40' y1='184' x2='720' y2='184' class='grid' /><text x='32' y='188' class='axis' text-anchor='end'>10</text><line x1='40' y1='148' x2='720' y2='148' class='grid' /><text x='32' y='152' class='axis' text-anchor='end'>20</text><line x1='40' y1='112' x2='720' y2='112' class='grid' /><text x='32' y='116' class='axis' text-anchor='end'>30</text><line x1='40' y1='76' x2='720' y2='76' class='grid' /><text x='32' y='80' class='axis' text-anchor='end'>40</text><line x1='40' y1='40' x2='720' y2='40' class='grid' /><text x='32' y='44' class='axis' text-anchor='end'>50</text>
+    <rect x='176' y='76' width='408' height='144' fill='#ff6a5c' />
+    <text x='380.0' y='232' class='axis' text-anchor='middle'>48</text>
+  </svg>
+</div>
+</div>
+<div class='section'>
+<div class='mode-title'><span class='dot' style='background:#4ecdc4'></span><h2 style='margin:0'>小写字母</h2></div>
+<div class='summary'>
+<div class='card'>历史次数：0</div>
+<div class='card'>历史最佳：0</div>
+<div class='card'>历史平均：0</div>
+<div class='card'>最近30次平均：0</div>
+</div>
+
+<div class='chart'>
+  <h3>最近成绩（分数）</h3>
+  <div class='nodata'>暂无数据</div>
+</div>
+
+<div class='chart'>
+  <h3>每周平均分（最近 12 周）</h3>
+  <div class='nodata'>暂无数据</div>
+</div>
+</div>
+<div class='section'>
+<div class='mode-title'><span class='dot' style='background:#556cd6'></span><h2 style='margin:0'>拼音</h2></div>
+<div class='summary'>
+<div class='card'>历史次数：0</div>
+<div class='card'>历史最佳：0</div>
+<div class='card'>历史平均：0</div>
+<div class='card'>最近30次平均：0</div>
+</div>
+
+<div class='chart'>
+  <h3>最近成绩（分数）</h3>
+  <div class='nodata'>暂无数据</div>
+</div>
+
+<div class='chart'>
+  <h3>每周平均分（最近 12 周）</h3>
+  <div class='nodata'>暂无数据</div>
+</div>
+</div>
+<div class='footer'>由 visualize_report.py 生成</div>
+</body></html>
