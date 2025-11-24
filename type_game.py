@@ -8,6 +8,8 @@ import glob
 import csv
 import time
 from datetime import datetime
+import webbrowser
+import importlib
 
 # --- 初始化设置 ---
 pygame.init()
@@ -206,6 +208,42 @@ def main():
     cached_rows = load_scores()
     # 菜单渲染时动态计算，确保按 T 切换生效
 
+    # --- 菜单按钮与动作 ---
+    last_message = ""
+    last_message_ttl = 0  # 帧计数，>0 时显示消息
+
+    def set_message(text: str, ttl_frames: int = 180):
+        nonlocal last_message, last_message_ttl
+        last_message = text
+        last_message_ttl = ttl_frames
+
+    def export_report(period: str):
+        try:
+            sys.path.append(os.path.join(base_dir, 'tools'))
+            export_report_mod = importlib.import_module('export_report')
+            rows = export_report_mod.read_rows(scores_csv)
+            agg = export_report_mod.aggregate(rows, period)
+            out_path = os.path.join(data_dir, f'report_{"weekly" if period=="weekly" else "monthly"}.csv')
+            export_report_mod.write_csv(agg, out_path)
+            set_message(f"已导出{ '周报' if period=='weekly' else '月报' }到 {out_path}")
+        except Exception:
+            set_message("导出失败，请稍后再试")
+
+    def build_and_open_html_report(recent_count: int = 30):
+        try:
+            sys.path.append(os.path.join(base_dir, 'tools'))
+            viz = importlib.import_module('visualize_report')
+            rows = viz.read_rows(scores_csv)
+            mode_rows = viz.group_by_mode(rows)
+            html = viz.build_html(mode_rows, recent=recent_count)
+            out_path = os.path.join(data_dir, 'report.html')
+            with open(out_path, 'w', encoding='utf-8') as f:
+                f.write(html)
+            opened = webbrowser.open('file://' + out_path)
+            set_message("已生成并尝试打开报告" + ("" if opened else "（请手动打开 data/report.html）"))
+        except Exception:
+            set_message("生成报告失败，请稍后再试")
+
     running = True
     while running:
         screen.fill(BG_COLOR)
@@ -248,6 +286,12 @@ def main():
                         # 切换“最近 N 次”统计窗口
                         recent_idx = (recent_idx + 1) % len(recent_options)
                         recent_n = recent_options[recent_idx]
+                    elif event.key == pygame.K_e:
+                        export_report('weekly')
+                    elif event.key == pygame.K_m:
+                        export_report('monthly')
+                    elif event.key == pygame.K_v:
+                        build_and_open_html_report(recent_n)
                 
                 elif game_state == "PLAY":
                     if event.key == pygame.K_ESCAPE:
@@ -278,34 +322,105 @@ def main():
                         
         # --- 游戏逻辑与渲染 ---
         if game_state == "MENU":
+            # UI 常量
+            PANEL_BG = (250, 252, 255)
+            PANEL_BORDER = (210, 220, 230)
+
+            def draw_panel(x, y, w, h, title_text=None):
+                rect = pygame.Rect(x, y, w, h)
+                pygame.draw.rect(screen, PANEL_BG, rect, border_radius=12)
+                pygame.draw.rect(screen, PANEL_BORDER, rect, width=2, border_radius=12)
+                if title_text:
+                    title = SCORE_FONT.render(title_text, True, (70, 70, 70))
+                    screen.blit(title, (x + 12, y + 8))
+                return rect
+
+            def draw_button(text, x, y, action, center=False):
+                surf = SCORE_FONT.render(text, True, (30, 30, 30))
+                padding_x, padding_y = 16, 8
+                rect = pygame.Rect(0, 0, surf.get_width() + padding_x * 2, surf.get_height() + padding_y * 2)
+                if center:
+                    rect.centerx = x
+                    rect.y = y
+                else:
+                    rect.x = x
+                    rect.y = y
+                pygame.draw.rect(screen, (255, 255, 255), rect, border_radius=8)
+                pygame.draw.rect(screen, PANEL_BORDER, rect, width=2, border_radius=8)
+                screen.blit(surf, (rect.x + padding_x, rect.y + padding_y))
+                menu_buttons.append((rect, action))
+
+            # 标题
             title_surf = GAME_FONT.render("彩虹打字大冒险", True, COLORS[0])
-            info_surf1 = SCORE_FONT.render("按 1 : 大写字母练习", True, BLACK)
-            info_surf2 = SCORE_FONT.render("按 2 : 小写字母练习", True, BLACK)
-            info_surf3 = SCORE_FONT.render("按 3 : 拼音练习 (如 ba)", True, BLACK)
-            
-            screen.blit(title_surf, (WIDTH//2 - title_surf.get_width()//2, 150))
-            screen.blit(info_surf1, (WIDTH//2 - info_surf1.get_width()//2, 250))
-            screen.blit(info_surf2, (WIDTH//2 - info_surf2.get_width()//2, 300))
-            screen.blit(info_surf3, (WIDTH//2 - info_surf3.get_width()//2, 350))
+            screen.blit(title_surf, (WIDTH//2 - title_surf.get_width()//2, 50))
 
-            # 显示每个模式的历史最佳与最近平均（最近 5 次）
+            # 操作反馈提示（标题下方）
+            if last_message_ttl > 0 and last_message:
+                msg = SCORE_FONT.render(last_message, True, (60, 120, 60))
+                screen.blit(msg, (WIDTH//2 - msg.get_width()//2, 120))
+                last_message_ttl -= 1
+
+            menu_buttons = []
+
+            # 左侧：开始面板
+            left_x, left_y, left_w, left_h = 60, 150, 360, 260
+            draw_panel(left_x, left_y, left_w, left_h, "开始练习")
+            btn_y = left_y + 60
+            vspace = 68
+            draw_button("开始：大写字母", left_x + 20, btn_y, 'START_1')
+            draw_button("开始：小写字母", left_x + 20, btn_y + vspace, 'START_2')
+            draw_button("开始：拼音", left_x + 20, btn_y + vspace * 2, 'START_3')
+
+            # 右侧：统计面板
+            right_x, right_y, right_w = 460, 150, 280
+            stat_h = 170
+            draw_panel(right_x, right_y, right_w, stat_h, "统计（按 T 也可切换）")
             def stat_line(lvl):
-                s = compute_stats(cached_rows, recent_n).get(lvl, {'best':0,'recent_avg':0})
-                return f"最佳: {s['best']}  最近{recent_n}次平均: {s['recent_avg']}"
-            stats1 = SCORE_FONT.render(stat_line(1), True, (80,80,80))
-            stats2 = SCORE_FONT.render(stat_line(2), True, (80,80,80))
-            stats3 = SCORE_FONT.render(stat_line(3), True, (80,80,80))
-            screen.blit(stats1, (WIDTH//2 - stats1.get_width()//2, 250+30))
-            screen.blit(stats2, (WIDTH//2 - stats2.get_width()//2, 300+30))
-            screen.blit(stats3, (WIDTH//2 - stats3.get_width()//2, 350+30))
+                s = compute_stats(cached_rows, recent_n).get(lvl, {'best': 0, 'recent_avg': 0})
+                return f"最佳 {s['best']}｜最近{recent_n}次 {s['recent_avg']}"
+            s1 = SCORE_FONT.render("大写：" + stat_line(1), True, (80, 80, 80))
+            s2 = SCORE_FONT.render("小写：" + stat_line(2), True, (80, 80, 80))
+            s3 = SCORE_FONT.render("拼音：" + stat_line(3), True, (80, 80, 80))
+            screen.blit(s1, (right_x + 16, right_y + 50))
+            screen.blit(s2, (right_x + 16, right_y + 50 + 40))
+            screen.blit(s3, (right_x + 16, right_y + 50 + 80))
+            draw_button(f"切换统计：最近{recent_n}次", right_x + 16, right_y + stat_h - 54, 'TOGGLE_RECENT')
 
-            # 提示切换统计窗口
-            tip = SCORE_FONT.render("按 T 切换统计窗口 (5/10/30)", True, (120,120,120))
-            screen.blit(tip, (WIDTH//2 - tip.get_width()//2, 400+30))
+            # 右下：报表与报告
+            rep_y = right_y + stat_h + 20
+            rep_h = 180
+            draw_panel(right_x, rep_y, right_w, rep_h, "报表与报告")
+            draw_button("导出周报 CSV", right_x + 16, rep_y + 50, 'EXPORT_WEEKLY')
+            draw_button("导出月报 CSV", right_x + 16, rep_y + 50 + 48, 'EXPORT_MONTHLY')
+            draw_button("查看学习报告", right_x + 16, rep_y + 50 + 96, 'VIEW_REPORT')
+
+            # 底部提示
+            tip = SCORE_FONT.render("快捷键：1/2/3 开始 · T 切换统计 · E/M 导出 · V 查看报告", True, (120, 120, 120))
+            screen.blit(tip, (WIDTH//2 - tip.get_width()//2, HEIGHT - 50))
             
         elif game_state == "PLAY":
             # 生成目标
             spawn_timer += 1
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and game_state == "MENU":
+                mx, my = event.pos
+                for rect, action in menu_buttons:
+                    if rect.collidepoint(mx, my):
+                        if action == 'START_1':
+                            current_level = 1; targets = []; score = 0; session_active = True; session_start_ts = time.time(); game_state = 'PLAY'
+                        elif action == 'START_2':
+                            current_level = 2; targets = []; score = 0; session_active = True; session_start_ts = time.time(); game_state = 'PLAY'
+                        elif action == 'START_3':
+                            current_level = 3; targets = []; score = 0; session_active = True; session_start_ts = time.time(); game_state = 'PLAY'
+                        elif action == 'TOGGLE_RECENT':
+                            recent_idx = (recent_idx + 1) % len(recent_options)
+                            recent_n = recent_options[recent_idx]
+                        elif action == 'EXPORT_WEEKLY':
+                            export_report('weekly')
+                        elif action == 'EXPORT_MONTHLY':
+                            export_report('monthly')
+                        elif action == 'VIEW_REPORT':
+                            build_and_open_html_report(recent_n)
+                        break
             if spawn_timer > spawn_rate:
                 spawn_timer = 0
                 if current_level == 1:

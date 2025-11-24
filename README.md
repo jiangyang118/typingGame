@@ -21,8 +21,13 @@ python type_game.py
 ```
 
 ## 操作说明
-- 菜单界面：按 `1` 进入大写字母、按 `2` 进入小写字母、按 `3` 进入拼音练习。
-- 游戏中：直接按键盘对应字符输入；按 `ESC` 返回菜单。
+- 菜单按钮：
+  - 开始：大写字母 / 小写字母 / 拼音（点击按钮进入）
+  - 切换统计：在“最近 5/10/30 次平均”间切换
+  - 导出周报 CSV / 导出月报 CSV（自动生成到 `data/`）
+  - 查看学习报告：生成并打开 `data/report.html`
+- 键盘也可操作：`1`/`2`/`3` 开始，`T` 切换统计，`E` 导出周报，`M` 导出月报，`V` 查看报告。
+- 游戏中：直接按键盘对应字符输入；按 `ESC` 返回菜单（并记录成绩）。
 - 目标落出屏幕后不会扣分或结束游戏，尽量保持轻松练习的体验。
 
 ## 学习进度与量化对比
@@ -37,6 +42,12 @@ python type_game.py
   - 月报：`python tools/export_report.py --period monthly`
 - 输出位置：`data/report_weekly.csv`、`data/report_monthly.csv`
 - 字段：周期、模式、次数、平均分、最高分、平均用时、平均完成数量。
+
+### 可视化学习报告（HTML）
+- 生成无需依赖的 HTML + SVG 报告（包含折线图、柱状图）：
+  - `python tools/visualize_report.py --recent 30 --out data/report.html`
+  - 打开 `data/report.html` 查看。
+  - 折线图展示各模式最近 N 次分数；柱状图展示最近 12 周的平均分。
 
 ## 教学使用方法
 
@@ -79,7 +90,8 @@ python type_game.py
 │   └── fonts/           # 已内置中文字体（开箱即用）
 ├── data/                # 运行后生成成绩记录（scores.csv）
 └── tools/
-    └── export_report.py # 导出周报/月报CSV
+    ├── export_report.py   # 导出周报/月报CSV
+    └── visualize_report.py# 生成 HTML+SVG 可视化报告
 ```
 
 ## 常见问题
