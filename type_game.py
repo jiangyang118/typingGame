@@ -1,6 +1,10 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import pygame
 import random
 import sys
+import os
+import glob
 
 # --- 初始化设置 ---
 pygame.init()
@@ -14,15 +18,78 @@ BLACK = (50, 50, 50)
 BG_COLOR = (230, 245, 255) # 淡蓝色背景
 COLORS = [(255, 105, 97), (255, 180, 128), (248, 243, 141), (66, 214, 164), (89, 173, 246)]
 
+def load_fonts():
+    """加载支持中文的字体：优先使用项目自带字体，其次匹配系统常见中文字体。
+
+    返回: (GAME_FONT, SCORE_FONT)
+    """
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    assets_font_dir = os.path.join(base_dir, 'assets', 'fonts')
+
+    # 1) 项目自带字体（将 .ttf/.otf 放到 assets/fonts/ 下即可生效）
+    custom_fonts = []
+    for pattern in ("*.ttf", "*.otf", "*.ttc"):
+        custom_fonts.extend(glob.glob(os.path.join(assets_font_dir, pattern)))
+
+    if custom_fonts:
+        font_file = sorted(custom_fonts)[0]
+        try:
+            game_font = pygame.font.Font(font_file, 60)
+            score_font = pygame.font.Font(font_file, 30)
+            return game_font, score_font
+        except Exception:
+            pass
+
+    # 2) 尝试通过 match_font 精确匹配常见中文字体文件路径
+    match_candidates = [
+        # Windows
+        'msyh', 'microsoft yahei', 'simhei', 'simsun', 'dengxian',
+        # macOS
+        'pingfang sc', 'heiti sc', 'stheiti', 'hiragino sans gb',
+        # Linux / 通用
+        'noto sans cjk sc', 'noto sans cjk', 'source han sans cn', 'wenquanyi zen hei'
+    ]
+
+    for name in match_candidates:
+        try:
+            path = pygame.font.match_font(name)
+            if path:
+                game_font = pygame.font.Font(path, 60)
+                score_font = pygame.font.Font(path, 30)
+                return game_font, score_font
+        except Exception:
+            continue
+
+    # 3) 系统常见中文字体候选（跨平台）使用 SysFont 名称
+    candidates = [
+        # Windows
+        'Microsoft YaHei', 'msyh', 'SimHei', 'SimSun', 'DengXian',
+        # macOS
+        'PingFang SC', 'Heiti SC', 'STHeiti', 'Hiragino Sans GB',
+        # Linux / 通用
+        'Noto Sans CJK SC', 'Source Han Sans CN', 'WenQuanYi Zen Hei', 'Noto Sans CJK',
+        # 英文字体中包含全字库的（有时可用）
+        'Arial Unicode MS'
+    ]
+
+    for name in candidates:
+        try:
+            # SysFont 会在找不到时降级，但这里我们只要能成功创建就算可用
+            game_font = pygame.font.SysFont(name, 60)
+            score_font = pygame.font.SysFont(name, 30)
+            if game_font and score_font:
+                return game_font, score_font
+        except Exception:
+            continue
+
+    # 4) 兜底：Arial（可能无法显示中文，会出现方块）
+    return (
+        pygame.font.SysFont('arial', 60, bold=True),
+        pygame.font.SysFont('arial', 30)
+    )
+
 # --- 字体设置 ---
-# 尝试使用系统黑体，如果失败则使用默认
-try:
-    font_path = pygame.font.match_font('simhei') # 寻找黑体
-    GAME_FONT = pygame.font.Font(font_path, 60)
-    SCORE_FONT = pygame.font.Font(font_path, 30)
-except:
-    GAME_FONT = pygame.font.SysFont('arial', 60, bold=True)
-    SCORE_FONT = pygame.font.SysFont('arial', 30)
+GAME_FONT, SCORE_FONT = load_fonts()
 
 # --- 游戏数据 ---
 # 第一关：认识字母（大写）
